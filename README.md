@@ -1,17 +1,19 @@
 # ZandEx Africa Operations
 
-Application métier pour le circuit : **achats → stock → agents → ventes → encaissements → dépenses → clôture → rapports**.
+Application de gestion d’un bureau de distribution : achats, stock, agents terrain, ventes, trésorerie, inventaires et rapports.
+
+## État actuel
+
+- Noyau de stock traçable, affectations, ventes terrain et ventes directes.
+- Dépenses, clôture journalière, inventaires justifiés, commissions, retours et versements.
+- Modèle PostgreSQL et contrôle de droits Direction/Gestionnaire.
+- Tests automatisés du noyau métier.
 
 ## Démarrage
 
-1. Copier `.env.example` vers `.env` et définir une base PostgreSQL.
-2. Installer les dépendances : `npm install`.
-3. Générer et appliquer le schéma : `npx prisma generate` puis `npx prisma migrate dev`.
-4. Démarrer : `npm run dev`.
+```bash
+npm install
+npm run dev
+```
 
-## Rôles
-
-- **Direction** : contrôle global, achats, référentiels et utilisateurs.
-- **Gestionnaire** : opérations quotidiennes, agents, ventes, dépenses, inventaires et rapports.
-
-Les opérations critiques doivent être validées côté serveur et inscrites au journal d’audit.
+Pour utiliser PostgreSQL, définir `DATABASE_URL` puis exécuter la migration Prisma avant le déploiement.
