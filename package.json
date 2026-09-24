@@ -1,0 +1,8 @@
+{
+  "name": "zandex-africa-v1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:core": "node --test zandex-core.test.js"
+  }
+}
