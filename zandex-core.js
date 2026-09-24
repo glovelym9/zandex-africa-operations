@@ -20,6 +20,13 @@ export class ZandExCore {
     this.ledger.push({id:crypto.randomUUID(),at:new Date().toISOString(),type:'CASH_RECEIPT',amount:cashReceived,actor,note:`Rapport agent ${agentId}`});
     return total;
   }
+  directSale({lines, cashReceived, actor}) {
+    const total=lines.reduce((sum,line)=>sum+(line.quantity*line.unitPrice)-(line.discount||0),0);
+    lines.forEach(line=>this.move({productId:line.productId,from:'office',quantity:line.quantity,actor,type:'DIRECT_SALE',note:'Vente directe bureau'}));
+    this.sales.push({id:crypto.randomUUID(),agentId:null,lines,total,cashReceived,actor,at:new Date().toISOString()});
+    this.ledger.push({id:crypto.randomUUID(),at:new Date().toISOString(),type:'CASH_RECEIPT',amount:cashReceived,actor,note:'Vente directe bureau'});
+    return total;
+  }
   expense({category, amount, agentId=null, actor, note}) { if(amount<=0) throw new Error('Montant invalide'); this.ledger.push({id:crypto.randomUUID(),at:new Date().toISOString(),type:'EXPENSE',category,amount,agentId,actor,note}); }
   inventory({location, lines, actor, justification=''}) {
     return lines.map(line => {

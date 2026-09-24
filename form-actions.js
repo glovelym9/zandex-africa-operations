@@ -45,6 +45,12 @@ export function submitDailyReport(draft, actor) {
   } catch (error) { return {valid:false,errors:[error.message]}; }
 }
 
+export function submitDirectSale(draft, actor) {
+  if (!draft.lines?.length || !(draft.cashReceived >= 0)) return {valid:false,errors:['Ajoutez au moins un produit et le montant encaissé.']};
+  try { return {valid:true,total:core.directSale({...draft,actor}),receipt:'Vente directe et encaissement enregistrés.'}; }
+  catch (error) { return {valid:false,errors:[error.message]}; }
+}
+
 export function submitExpense(draft, actor) {
   if (!draft.category || !(draft.amount > 0) || !draft.note?.trim()) return {valid:false,errors:['Catégorie, montant et motif sont obligatoires.']};
   core.expense({...draft,actor});

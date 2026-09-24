@@ -25,3 +25,11 @@ test('un rapport multi-produits réduit le stock de l’agent', () => {
   assert.equal(core.quantity('agent/jesse','p1'),2);
   assert.equal(core.quantity('agent/jesse','p2'),2);
 });
+
+test('une vente directe diminue le stock du bureau et crée un encaissement', () => {
+  const core=new ZandExCore();
+  core.move({productId:'p1',to:'office',quantity:3,actor:'direction',type:'OPENING'});
+  assert.equal(core.directSale({actor:'gestionnaire',cashReceived:20000,lines:[{productId:'p1',quantity:2,unitPrice:10000}]}),20000);
+  assert.equal(core.quantity('office','p1'),1);
+  assert.equal(core.ledger.at(-1).type,'CASH_RECEIPT');
+});
