@@ -90,6 +90,59 @@ export async function assignStock(db, user, input) {
   });
 }
 
+export async function recordSale(db, user, input) {
+  assertAccess(user, 'sales');
+  if (!input.locationId || !input.lines?.length) throw new Error('Emplacement et produits vendus requis.');
+  const cashReceived = nonnegativeMoney(input.cashReceived);
+  const lines = input.lines.map(line => ({
+    productId: line.productId,
+    quantity: positiveQuantity(line.quantity),
+    discount: nonnegativeMoney(line.discount || 0),
+  }));
+  if (lines.some(line => !line.productId)) throw new Error('Produit requis pour chaque ligne.');
+  return db.$transaction(async tx => {
+    const location = await tx.stockLocation.findUnique({where: {id: input.locationId}});
+    if (!location || (location.type === 'AGENT' && location.agentId !== input.agentId)
+      || (location.type === 'BUREAU' && input.agentId)
+      || !['AGENT', 'BUREAU'].includes(location.type)) {
+      throw new Error('Emplacement de vente incompatible avec l’agent.');
+    }
+    let total = 0;
+    let discount = 0;
+    const saleLines = [];
+    for (const line of lines) {
+      const product = await tx.product.findUnique({where: {id: line.productId}});
+      if (!product?.active) throw new Error('Produit introuvable ou inactif.');
+      const unitPrice = Number(product.salePrice);
+      const gross = unitPrice * line.quantity;
+      if (line.discount > gross) throw new Error('La remise dépasse la valeur de la ligne.');
+      total += gross - line.discount;
+      discount += line.discount;
+      saleLines.push({...line, unitPrice});
+    }
+    if (cashReceived !== total && !input.varianceNote?.trim()) {
+      throw new Error('Un écart entre ventes et argent remis exige une justification écrite.');
+    }
+    for (const line of saleLines) await debit(tx, input.locationId, line.productId, line.quantity);
+    const sale = await tx.sale.create({data: {
+      agentId: input.agentId || null, total, discount, cashReceived,
+      lines: {create: saleLines},
+    }});
+    for (const line of saleLines) {
+      await tx.stockMovement.create({data: {
+        type: input.agentId ? 'AGENT_SALE' : 'DIRECT_SALE', productId: line.productId,
+        quantity: line.quantity, fromId: input.locationId, actorId: user.id,
+        note: `Vente ${sale.id}`,
+      }});
+    }
+    await tx.cashMovement.create({data: {
+      type: 'SALE_RECEIPT', amount: cashReceived, actorId: user.id,
+      note: `Vente ${sale.id}${input.varianceNote ? ` — ${input.varianceNote.trim()}` : ''}`,
+    }});
+    return sale;
+  });
+}
+
 export async function recordExpense(db, user, input) {
   assertAccess(user, 'expenses');
   const amount = nonnegativeMoney(input.amount);

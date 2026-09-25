@@ -1,11 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createPurchase, transferStock, recordExpense} from './operations.js';
+import {createPurchase, transferStock, recordExpense, recordSale} from './operations.js';
 
 const user = {id: 'direction-1', role: 'DIRECTION'};
 
 function database(initial = {}) {
-  const state = {balances: {...initial}, movements: [], purchases: [], expenses: [], cash: []};
+  const state = {balances: {...initial}, movements: [], purchases: [], sales: [], expenses: [], cash: []};
   return {
     state,
     async $transaction(work) {
@@ -29,6 +29,19 @@ function database(initial = {}) {
           const purchase = {id: `purchase-${draft.purchases.length + 1}`, ...data};
           draft.purchases.push(purchase);
           return purchase;
+        }},
+        stockLocation: {async findUnique({where}) {
+          return where.id === 'agent-location' ? {id: where.id, type: 'AGENT', agentId: 'agent-1'}
+            : where.id === 'office' ? {id: where.id, type: 'BUREAU', agentId: null} : null;
+        }},
+        product: {async findUnique({where}) {
+          return where.id === 'a' ? {id: 'a', active: true, salePrice: 10}
+            : where.id === 'b' ? {id: 'b', active: true, salePrice: 20} : null;
+        }},
+        sale: {async create({data}) {
+          const sale = {id: `sale-${draft.sales.length + 1}`, ...data};
+          draft.sales.push(sale);
+          return sale;
         }},
         stockMovement: {async create({data}) {
           draft.movements.push(data);
@@ -79,4 +92,28 @@ test('une dépense génère une écriture de caisse liée au responsable', async
   await recordExpense(db, user, {category: 'Transport', amount: 15, note: 'Livraison'});
   assert.equal(db.state.expenses[0].amount, 15);
   assert.deepEqual(db.state.cash[0], {type: 'EXPENSE', amount: 15, note: 'Livraison', actorId: user.id});
+});
+
+test('un rapport multi-produits retire le stock agent et crédite la caisse', async () => {
+  const db = database({'agent-location:a': 5, 'agent-location:b': 3});
+  const sale = await recordSale(db, user, {
+    locationId: 'agent-location', agentId: 'agent-1', cashReceived: 48,
+    lines: [{productId: 'a', quantity: 3, discount: 2}, {productId: 'b', quantity: 1}],
+  });
+  assert.equal(sale.total, 48);
+  assert.equal(db.state.balances['agent-location:a'], 2);
+  assert.equal(db.state.balances['agent-location:b'], 2);
+  assert.equal(db.state.movements.length, 2);
+  assert.equal(db.state.cash[0].amount, 48);
+});
+
+test('un écart de caisse non justifié annule toute la vente', async () => {
+  const db = database({'agent-location:a': 5});
+  await assert.rejects(recordSale(db, user, {
+    locationId: 'agent-location', agentId: 'agent-1', cashReceived: 9,
+    lines: [{productId: 'a', quantity: 1}],
+  }), /justification écrite/);
+  assert.equal(db.state.balances['agent-location:a'], 5);
+  assert.equal(db.state.sales.length, 0);
+  assert.equal(db.state.cash.length, 0);
 });
