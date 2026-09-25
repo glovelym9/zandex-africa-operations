@@ -4,10 +4,10 @@ Application de gestion d’un bureau de distribution : achats, stock, agents ter
 
 ## État actuel
 
-- Prototype d'interface encore alimenté par le stockage local du navigateur : **ne pas utiliser en production**.
-- Noyau serveur transactionnel pour achats, transferts, ventes multi-produits et dépenses, avec tests automatisés.
-- Modèle PostgreSQL, connexion/session Direction/Gestionnaire et API protégées pour les référentiels, achats, transferts, ventes et dépenses.
-- Les formulaires ne sont pas encore raccordés au serveur et la base partagée n'est pas provisionnée.
+- Interface reliée à l’API protégée : référentiels, achats multi-produits, transferts, rapports de vente multi-produits, dépenses, versements, inventaires et clôtures.
+- Noyau serveur transactionnel pour stock et ventes, avec tests automatisés.
+- Modèle PostgreSQL, migration initiale, connexion/session Direction/Gestionnaire.
+- **Pas encore en production** : la base partagée n'est pas provisionnée et les parcours doivent être testés contre cette base avant ouverture aux équipes.
 
 ## Démarrage
 
@@ -16,4 +16,4 @@ npm install
 npm run dev
 ```
 
-Pour préparer PostgreSQL, définir `DATABASE_URL`, exécuter `npm run db:generate` puis `npm run db:push`. Le premier compte Direction se crée une seule fois avec `ADMIN_EMAIL`, `ADMIN_PASSWORD` (12 caractères minimum) et, facultativement, `ADMIN_NAME`, via `npm run db:bootstrap`. Ne jamais enregistrer ces secrets dans Git.
+Pour préparer PostgreSQL, définir `DATABASE_URL`, exécuter `npm run db:generate` puis `npm run db:migrate`. Le premier compte Direction se crée une seule fois avec `ADMIN_EMAIL`, `ADMIN_PASSWORD` (12 caractères minimum) et, facultativement, `ADMIN_NAME`, via `npm run db:bootstrap`. Ne jamais enregistrer ces secrets dans Git.

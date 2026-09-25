@@ -1,13 +1,16 @@
 import {cookies, headers} from 'next/headers';
 import {db} from '../../lib/db.js';
 import {resolveSession} from '../../lib/session.js';
-import {createPurchase, transferStock, recordSale, recordExpense} from '../../lib/operations.js';
+import {createPurchase, transferStock, recordSale, recordExpense, countInventory, recordDeposit, closeDay} from '../../lib/operations.js';
 
 const handlers = {
   purchase: createPurchase,
   transfer: transferStock,
   sale: recordSale,
   expense: recordExpense,
+  inventory: countInventory,
+  deposit: recordDeposit,
+  closing: closeDay,
 };
 
 export async function POST(request) {
@@ -31,7 +34,7 @@ export async function POST(request) {
     if (error.message === 'Accès non autorisé.') {
       return Response.json({error: error.message}, {status: 403});
     }
-    if (/Stock insuffisant|invalide|requis|justification|dépasse|introuvable|incompatible|distincts/.test(error.message)) {
+    if (/Stock insuffisant|invalide|requis|justification|dépasse|introuvable|incompatible|distincts|clôturée|dernière/.test(error.message)) {
       return Response.json({error: error.message}, {status: 422});
     }
     return Response.json({error: 'Opération impossible. Aucune écriture validée.'}, {status: 500});

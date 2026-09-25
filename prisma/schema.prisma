@@ -45,6 +45,8 @@ model User {
   sessions  Session[]
   movements StockMovement[]
   cash      CashMovement[]
+  inventories InventoryCount[]
+  closings DayClosing[]
   createdAt DateTime        @default(now())
 }
 
@@ -87,6 +89,7 @@ model Product {
   purchaseLines PurchaseLine[]
   movements    StockMovement[]
   saleLines    SaleLine[]
+  inventories  InventoryCount[]
 }
 
 model StockLocation {
@@ -98,6 +101,7 @@ model StockLocation {
   balances  StockBalance[]
   fromMoves StockMovement[] @relation("FromLocation")
   toMoves   StockMovement[] @relation("ToLocation")
+  inventories InventoryCount[]
 
   @@unique([type, label])
 }
@@ -187,7 +191,39 @@ model CashMovement {
   type      CashType
   amount    Decimal  @db.Decimal(14, 2)
   note      String?
+  account   String?
+  proof     String?
   actorId   String
   actor     User     @relation(fields: [actorId], references: [id])
   createdAt DateTime @default(now())
+}
+
+model InventoryCount {
+  id            String        @id @default(cuid())
+  locationId    String
+  location      StockLocation @relation(fields: [locationId], references: [id])
+  productId     String
+  product       Product       @relation(fields: [productId], references: [id])
+  theoretical   Int
+  physical      Int
+  variance      Int
+  justification String?
+  actorId       String
+  actor         User          @relation(fields: [actorId], references: [id])
+  createdAt     DateTime      @default(now())
+}
+
+model DayClosing {
+  id             String   @id @default(cuid())
+  businessDate   DateTime @unique @db.Date
+  openingBalance Decimal  @db.Decimal(14, 2)
+  receipts       Decimal  @db.Decimal(14, 2)
+  expenses       Decimal  @db.Decimal(14, 2)
+  deposits       Decimal  @db.Decimal(14, 2)
+  commissions    Decimal  @db.Decimal(14, 2)
+  closingBalance Decimal  @db.Decimal(14, 2)
+  note           String?
+  actorId        String
+  actor          User     @relation(fields: [actorId], references: [id])
+  createdAt      DateTime @default(now())
 }

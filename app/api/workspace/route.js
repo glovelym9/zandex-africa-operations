@@ -10,19 +10,21 @@ async function currentUser() {
 export async function GET() {
   const user = await currentUser();
   if (!user) return Response.json({error: 'Session expirée ou absente.'}, {status: 401});
-  const [products, suppliers, agents, locations, balances, purchases, sales, expenses, cash, movements] = await Promise.all([
+  const [products, suppliers, agents, locations, balances, purchases, sales, expenses, cash, movements, inventories, closings] = await Promise.all([
     db.product.findMany({orderBy: {name: 'asc'}}),
     db.supplier.findMany({orderBy: {name: 'asc'}}),
     db.agent.findMany({orderBy: {name: 'asc'}}),
     db.stockLocation.findMany({orderBy: {label: 'asc'}}),
     db.stockBalance.findMany(),
-    db.purchase.findMany({orderBy: {createdAt: 'desc'}, take: 100, include: {lines: true}}),
-    db.sale.findMany({orderBy: {createdAt: 'desc'}, take: 100, include: {lines: true}}),
-    db.expense.findMany({orderBy: {createdAt: 'desc'}, take: 100}),
-    db.cashMovement.findMany({orderBy: {createdAt: 'desc'}, take: 200}),
-    db.stockMovement.findMany({orderBy: {createdAt: 'desc'}, take: 200}),
+    db.purchase.findMany({orderBy: {createdAt: 'desc'}, include: {lines: true}}),
+    db.sale.findMany({orderBy: {createdAt: 'desc'}, include: {lines: true}}),
+    db.expense.findMany({orderBy: {createdAt: 'desc'}}),
+    db.cashMovement.findMany({orderBy: {createdAt: 'desc'}}),
+    db.stockMovement.findMany({orderBy: {createdAt: 'desc'}}),
+    db.inventoryCount.findMany({orderBy: {createdAt: 'desc'}}),
+    db.dayClosing.findMany({orderBy: {businessDate: 'desc'}}),
   ]);
-  return Response.json({user, products, suppliers, agents, locations, balances, purchases, sales, expenses, cash, movements});
+  return Response.json({user, products, suppliers, agents, locations, balances, purchases, sales, expenses, cash, movements, inventories, closings});
 }
 
 export async function POST(request) {
