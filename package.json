@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test:core": "node --test zandex-core.test.js app/lib/operations.test.js"
+    "db:generate": "prisma generate",
+    "db:push": "prisma db push",
+    "db:bootstrap": "node scripts/bootstrap-admin.mjs",
+    "test:core": "node --test zandex-core.test.js app/lib/*.test.js"
   },
   "dependencies": {
     "@prisma/client": "^6.0.0",

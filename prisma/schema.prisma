@@ -40,10 +40,21 @@ model User {
   id        String          @id @default(cuid())
   name      String
   email     String          @unique
+  passwordHash String
   role      Role
+  sessions  Session[]
   movements StockMovement[]
   cash      CashMovement[]
   createdAt DateTime        @default(now())
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
 
 model Agent {
