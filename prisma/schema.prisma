@@ -1,21 +1,182 @@
-generator client { provider = "prisma-client-js" }
-datasource db { provider = "postgresql"; url = env("DATABASE_URL") }
+generator client {
+  provider = "prisma-client-js"
+}
 
-enum Role { DIRECTION GESTIONNAIRE }
-enum LocationType { GENERAL BUREAU AGENT }
-enum MovementType { PURCHASE OFFICE_SUPPLY AGENT_ASSIGNMENT AGENT_RETURN AGENT_SALE DIRECT_SALE INVENTORY_ADJUSTMENT }
-enum CashType { SALE_RECEIPT EXPENSE BANK_DEPOSIT COMMISSION DAY_CLOSING }
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
 
-model User { id String @id @default(cuid()); name String; email String @unique; role Role; movements StockMovement[]; cash CashMovement[]; createdAt DateTime @default(now()) }
-model Agent { id String @id @default(cuid()); name String; phone String?; active Boolean @default(true); locations StockLocation[]; sales Sale[]; expenses Expense[]; createdAt DateTime @default(now()) }
-model Supplier { id String @id @default(cuid()); name String; phone String?; purchases Purchase[]; active Boolean @default(true) }
-model Product { id String @id @default(cuid()); reference String? @unique; name String; salePrice Decimal @db.Decimal(14,2); minimumStock Int @default(0); lines PurchaseLine[]; movements StockMovement[]; saleLines SaleLine[]; active Boolean @default(true) }
-model StockLocation { id String @id @default(cuid()); type LocationType; label String; agentId String? @unique; agent Agent? @relation(fields:[agentId],references:[id]); balances StockBalance[]; fromMoves StockMovement[] @relation("From"); toMoves StockMovement[] @relation("To"); @@unique([type,label]) }
-model StockBalance { id String @id @default(cuid()); quantity Int @default(0); locationId String; productId String; location StockLocation @relation(fields:[locationId],references:[id]); product Product @relation(fields:[productId],references:[id]); @@unique([locationId,productId]) }
-model Purchase { id String @id @default(cuid()); supplierId String; supplier Supplier @relation(fields:[supplierId],references:[id]); reference String?; date DateTime; total Decimal @db.Decimal(14,2); lines PurchaseLine[]; createdAt DateTime @default(now()) }
-model PurchaseLine { id String @id @default(cuid()); purchaseId String; purchase Purchase @relation(fields:[purchaseId],references:[id]); productId String; product Product @relation(fields:[productId],references:[id]); quantity Int; unitCost Decimal @db.Decimal(14,2) }
-model StockMovement { id String @id @default(cuid()); type MovementType; productId String; product Product @relation(fields:[productId],references:[id]); quantity Int; fromId String?; from StockLocation? @relation("From",fields:[fromId],references:[id]); toId String?; to StockLocation? @relation("To",fields:[toId],references:[id]); actorId String; actor User @relation(fields:[actorId],references:[id]); note String?; createdAt DateTime @default(now()) }
-model Sale { id String @id @default(cuid()); agentId String?; agent Agent? @relation(fields:[agentId],references:[id]); total Decimal @db.Decimal(14,2); discount Decimal @default(0) @db.Decimal(14,2); cashReceived Decimal @db.Decimal(14,2); lines SaleLine[]; createdAt DateTime @default(now()) }
-model SaleLine { id String @id @default(cuid()); saleId String; sale Sale @relation(fields:[saleId],references:[id]); productId String; product Product @relation(fields:[productId],references:[id]); quantity Int; unitPrice Decimal @db.Decimal(14,2); discount Decimal @default(0) @db.Decimal(14,2) }
-model Expense { id String @id @default(cuid()); category String; amount Decimal @db.Decimal(14,2); note String; agentId String?; agent Agent? @relation(fields:[agentId],references:[id]); createdAt DateTime @default(now()) }
-model CashMovement { id String @id @default(cuid()); type CashType; amount Decimal @db.Decimal(14,2); note String?; actorId String; actor User @relation(fields:[actorId],references:[id]); createdAt DateTime @default(now()) }
+enum Role {
+  DIRECTION
+  GESTIONNAIRE
+}
+
+enum LocationType {
+  GENERAL
+  BUREAU
+  AGENT
+}
+
+enum MovementType {
+  PURCHASE
+  OFFICE_SUPPLY
+  AGENT_ASSIGNMENT
+  AGENT_RETURN
+  AGENT_SALE
+  DIRECT_SALE
+  INVENTORY_ADJUSTMENT
+}
+
+enum CashType {
+  SALE_RECEIPT
+  EXPENSE
+  BANK_DEPOSIT
+  COMMISSION
+  DAY_CLOSING
+}
+
+model User {
+  id        String          @id @default(cuid())
+  name      String
+  email     String          @unique
+  role      Role
+  movements StockMovement[]
+  cash      CashMovement[]
+  createdAt DateTime        @default(now())
+}
+
+model Agent {
+  id        String         @id @default(cuid())
+  name      String
+  phone     String?
+  active    Boolean        @default(true)
+  locations StockLocation[]
+  sales     Sale[]
+  expenses  Expense[]
+  createdAt DateTime       @default(now())
+}
+
+model Supplier {
+  id        String     @id @default(cuid())
+  name      String
+  phone     String?
+  active    Boolean    @default(true)
+  purchases Purchase[]
+}
+
+model Product {
+  id           String          @id @default(cuid())
+  reference    String?         @unique
+  name         String
+  salePrice    Decimal         @db.Decimal(14, 2)
+  minimumStock Int             @default(0)
+  active       Boolean         @default(true)
+  balances     StockBalance[]
+  purchaseLines PurchaseLine[]
+  movements    StockMovement[]
+  saleLines    SaleLine[]
+}
+
+model StockLocation {
+  id        String          @id @default(cuid())
+  type      LocationType
+  label     String
+  agentId   String?         @unique
+  agent     Agent?          @relation(fields: [agentId], references: [id])
+  balances  StockBalance[]
+  fromMoves StockMovement[] @relation("FromLocation")
+  toMoves   StockMovement[] @relation("ToLocation")
+
+  @@unique([type, label])
+}
+
+model StockBalance {
+  id         String        @id @default(cuid())
+  quantity   Int           @default(0)
+  locationId String
+  productId  String
+  location   StockLocation @relation(fields: [locationId], references: [id])
+  product    Product       @relation(fields: [productId], references: [id])
+
+  @@unique([locationId, productId])
+}
+
+model Purchase {
+  id         String         @id @default(cuid())
+  supplierId String
+  supplier   Supplier       @relation(fields: [supplierId], references: [id])
+  reference  String?
+  date       DateTime
+  total      Decimal        @db.Decimal(14, 2)
+  lines      PurchaseLine[]
+  createdAt  DateTime       @default(now())
+}
+
+model PurchaseLine {
+  id         String   @id @default(cuid())
+  purchaseId String
+  productId  String
+  quantity   Int
+  unitCost   Decimal  @db.Decimal(14, 2)
+  purchase   Purchase @relation(fields: [purchaseId], references: [id])
+  product    Product  @relation(fields: [productId], references: [id])
+}
+
+model StockMovement {
+  id        String         @id @default(cuid())
+  type      MovementType
+  productId String
+  product   Product        @relation(fields: [productId], references: [id])
+  quantity  Int
+  fromId    String?
+  from      StockLocation? @relation("FromLocation", fields: [fromId], references: [id])
+  toId      String?
+  to        StockLocation? @relation("ToLocation", fields: [toId], references: [id])
+  actorId   String
+  actor     User           @relation(fields: [actorId], references: [id])
+  note      String?
+  createdAt DateTime       @default(now())
+}
+
+model Sale {
+  id           String     @id @default(cuid())
+  agentId      String?
+  agent        Agent?     @relation(fields: [agentId], references: [id])
+  total        Decimal    @db.Decimal(14, 2)
+  discount     Decimal    @default(0) @db.Decimal(14, 2)
+  cashReceived Decimal    @db.Decimal(14, 2)
+  lines        SaleLine[]
+  createdAt    DateTime   @default(now())
+}
+
+model SaleLine {
+  id        String  @id @default(cuid())
+  saleId    String
+  sale      Sale    @relation(fields: [saleId], references: [id])
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  unitPrice Decimal @db.Decimal(14, 2)
+  discount  Decimal @default(0) @db.Decimal(14, 2)
+}
+
+model Expense {
+  id        String   @id @default(cuid())
+  category  String
+  amount    Decimal  @db.Decimal(14, 2)
+  note      String
+  agentId   String?
+  agent     Agent?   @relation(fields: [agentId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+model CashMovement {
+  id        String   @id @default(cuid())
+  type      CashType
+  amount    Decimal  @db.Decimal(14, 2)
+  note      String?
+  actorId   String
+  actor     User     @relation(fields: [actorId], references: [id])
+  createdAt DateTime @default(now())
+}

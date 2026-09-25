@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test:core": "node --test zandex-core.test.js"
+    "test:core": "node --test zandex-core.test.js app/lib/operations.test.js"
   },
   "dependencies": {
     "@prisma/client": "^6.0.0",
