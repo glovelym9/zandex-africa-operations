@@ -6,7 +6,7 @@ Application de gestion d’un bureau de distribution : achats, stock, agents ter
 
 - Prototype d'interface encore alimenté par le stockage local du navigateur : **ne pas utiliser en production**.
 - Noyau serveur transactionnel pour achats, transferts, ventes multi-produits et dépenses, avec tests automatisés.
-- Modèle PostgreSQL et premiers endpoints de connexion/session Direction/Gestionnaire.
+- Modèle PostgreSQL, connexion/session Direction/Gestionnaire et API protégées pour les référentiels, achats, transferts, ventes et dépenses.
 - Les formulaires ne sont pas encore raccordés au serveur et la base partagée n'est pas provisionnée.
 
 ## Démarrage
