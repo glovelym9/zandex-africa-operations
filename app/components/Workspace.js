@@ -3,6 +3,7 @@
 import {useCallback, useEffect, useState} from 'react';
 import {Dashboard, Catalog, Purchases, Stock, Sales, Finance, Inventory, Reports} from './WorkspaceModules.js';
 import CommissionForm from './CommissionForm.js';
+import ReportsPeriod from './ReportsPeriod.js';
 import '../workspace.css';
 
 const NAV = [
@@ -63,7 +64,7 @@ export default function Workspace({user}) {
   const module = {
     dashboard: <Dashboard {...props}/>, catalog: <Catalog {...props}/>, purchases: <Purchases {...props}/>,
     stock: <Stock {...props}/>, sales: <Sales {...props}/>, finance: <><Finance {...props}/><CommissionForm {...props}/></>,
-    inventory: <Inventory {...props}/>, reports: <Reports {...props}/>,
+    inventory: <Inventory {...props}/>, reports: <ReportsPeriod {...props}/>,
   }[view];
 
   return <main className="shell connected-shell"><button className="mobile-menu" type="button" onClick={()=>setMenu(!menu)} aria-label="Afficher les modules" aria-expanded={menu}>☰</button><aside className={menu?'opened':''}><div className="brand"><span>Zand</span>Ex<small>AFRICA · OPERATIONS</small></div><div className="office"><b>BUREAU PRINCIPAL</b><br/>Circuit marchandises & caisse</div><nav aria-label="Modules">{NAV.filter(item=>user.role==='DIRECTION'||!['catalog','purchases'].includes(item[0])).map(([key,label,group],index,array)=><div key={key}>{(index===0||array[index-1][2]!==group)&&<div className="nav-group">{group}</div>}<button type="button" className={view===key?'active':''} onClick={()=>go(key)}>{label}</button></div>)}</nav><footer><b>{user.name}</b><br/><span>{user.role==='DIRECTION'?'Direction':'Gestionnaire'}</span><button type="button" className="logout" onClick={logout}>Se déconnecter</button></footer></aside><section className="workspace"><header><div><b>{current[1].toUpperCase()}</b><small>{new Intl.DateTimeFormat('fr-FR',{dateStyle:'full'}).format(new Date())} · Bureau principal</small></div><span className="live"><i/> Données partagées</span></header><div className="content">{notice&&<div className={'toast '+(notice.kind==='error'?'toast-error':'')} role={notice.kind==='error'?'alert':'status'}>{notice.text}<button type="button" onClick={()=>setNotice(null)} aria-label="Fermer">×</button></div>}{loading?<div className="loading-rows" role="status" aria-live="polite"><span>Chargement des données du bureau…</span><i/><i/><i/></div>:data?module:<div className="panel empty"><b>Connexion aux données indisponible</b><p>Réessayez le chargement. Aucune opération locale ne sera enregistrée.</p><button className="primary" onClick={()=>{setLoading(true);load().finally(()=>setLoading(false));}}>Réessayer</button></div>}</div></section></main>;
