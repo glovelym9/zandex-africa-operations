@@ -108,6 +108,9 @@ export async function recordSale(db, user, input) {
   assertAccess(user, 'sales');
   if (!input.locationId || !input.lines?.length) throw new Error('Emplacement et produits vendus requis.');
   const cashReceived = nonnegativeMoney(input.cashReceived);
+  if (user.role !== 'DIRECTION' && input.lines.some(line => Number(line.discount || 0) > 0)) {
+    throw new Error('Accès non autorisé.');
+  }
   const lines = input.lines.map(line => ({
     productId: line.productId,
     quantity: positiveQuantity(line.quantity),
