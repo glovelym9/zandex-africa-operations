@@ -4,6 +4,7 @@ import {useCallback, useEffect, useState} from 'react';
 import {Dashboard, Catalog, Purchases, Stock, Sales, Finance, Inventory, Reports} from './WorkspaceModules.js';
 import CommissionForm from './CommissionForm.js';
 import ReportsPeriod from './ReportsPeriod.js';
+import StaffAccounts from './StaffAccounts.js';
 import '../workspace.css';
 
 const NAV = [
@@ -62,7 +63,7 @@ export default function Workspace({user}) {
   const current = NAV.find(item => item[0] === view);
   const props = {data, busy, operation, create, go, user};
   const module = {
-    dashboard: <Dashboard {...props}/>, catalog: <Catalog {...props}/>, purchases: <Purchases {...props}/>,
+    dashboard: <Dashboard {...props}/>, catalog: <><Catalog {...props}/>{user.role==='DIRECTION'&&<StaffAccounts/>}</>, purchases: <Purchases {...props}/>,
     stock: <Stock {...props}/>, sales: <Sales {...props}/>, finance: <><Finance {...props}/><CommissionForm {...props}/></>,
     inventory: <Inventory {...props}/>, reports: <ReportsPeriod {...props}/>,
   }[view];
