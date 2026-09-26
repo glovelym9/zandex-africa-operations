@@ -2,6 +2,7 @@
 
 import {useCallback, useEffect, useState} from 'react';
 import {Dashboard, Catalog, Purchases, Stock, Sales, Finance, Inventory, Reports} from './WorkspaceModules.js';
+import CommissionForm from './CommissionForm.js';
 import '../workspace.css';
 
 const NAV = [
@@ -61,7 +62,7 @@ export default function Workspace({user}) {
   const props = {data, busy, operation, create, go, user};
   const module = {
     dashboard: <Dashboard {...props}/>, catalog: <Catalog {...props}/>, purchases: <Purchases {...props}/>,
-    stock: <Stock {...props}/>, sales: <Sales {...props}/>, finance: <Finance {...props}/>,
+    stock: <Stock {...props}/>, sales: <Sales {...props}/>, finance: <><Finance {...props}/><CommissionForm {...props}/></>,
     inventory: <Inventory {...props}/>, reports: <Reports {...props}/>,
   }[view];
 
