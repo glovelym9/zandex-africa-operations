@@ -218,6 +218,22 @@ export async function recordDeposit(db, user, input) {
   }});
 }
 
+export async function recordCommission(db, user, input) {
+  assertAccess(user, 'cash');
+  const salesAmount = nonnegativeMoney(input.salesAmount);
+  const rate = Number(input.rate);
+  if (!input.agentId || !Number.isFinite(rate) || rate < 0 || rate > 100) {
+    throw new Error('Agent et taux entre 0 et 100 requis.');
+  }
+  const agent = await db.agent.findUnique({where: {id: input.agentId}});
+  if (!agent?.active) throw new Error('Agent introuvable ou inactif.');
+  const amount = Math.round(salesAmount * rate) / 100;
+  return db.cashMovement.create({data: {
+    type: 'COMMISSION', amount, actorId: user.id,
+    note: `Commission ${agent.name} : ${rate}% de ${salesAmount}. ${input.note?.trim() || ''}`,
+  }});
+}
+
 export async function closeDay(db, user, input) {
   assertAccess(user, 'cash');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(input.businessDate || '')) throw new Error('Date de clôture invalide.');

@@ -1,7 +1,7 @@
 import {cookies, headers} from 'next/headers';
 import {db} from '../../lib/db.js';
 import {resolveSession} from '../../lib/session.js';
-import {createPurchase, transferStock, recordSale, recordExpense, countInventory, recordDeposit, closeDay} from '../../lib/operations.js';
+import {createPurchase, transferStock, recordSale, recordExpense, countInventory, recordDeposit, recordCommission, closeDay} from '../../lib/operations.js';
 
 const handlers = {
   purchase: createPurchase,
@@ -10,6 +10,7 @@ const handlers = {
   expense: recordExpense,
   inventory: countInventory,
   deposit: recordDeposit,
+  commission: recordCommission,
   closing: closeDay,
 };
 
